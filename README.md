@@ -4,6 +4,8 @@ A free, single-page tool that helps small business owners keep their listings co
 
 Built by an SEO expert with 15+ years of hands-on experience helping local businesses get found. The checklist and schema fields are based on the same process used to audit real client listings.
 
+See it live: https://mgracen.github.io/napdetector/
+
 ## What it does
 
 - **Business info form** — enter your name, address, phone, hours, business type, and a few optional details once.
