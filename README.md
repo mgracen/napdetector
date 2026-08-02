@@ -1,3 +1,4 @@
+<img width="1313" height="488" alt="Screenshot 2026-08-02 10 47 49 AM" src="https://github.com/user-attachments/assets/c80ab869-b3ff-4d77-9efe-253519521915" />
 # NAPCheck
 
 A free, single-page tool that helps small business owners keep their listings correct on Google, Apple Maps, Yelp, and Bing, generate robust schema markup for their website, and write a search title and description that won't get cut off in results.
