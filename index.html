@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAPCheck: Local business schema, listing audit & SEO title generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232B6E63'/%3E%3Cpath d='M28 52 L44 68 L74 34' stroke='%23F8F9F7' stroke-width='11' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --paper:#EEF1EE; --paper-raised:#F8F9F7; --ink:#16232E; --ink-soft:#4A5A63;
+    --brand:#2B6E63; --brand-deep:#1D4D45; --good:#2B6E63; --warn:#B4802B; --critical:#AC4634;
+    --line:#D3D9D2; --line-strong:#B7C0B6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Roboto', sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Roboto', sans-serif; font-weight:700; margin:0; letter-spacing:-0.01em; }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  .app{ max-width:1080px; margin:0 auto; padding:36px 24px 90px; }
+
+  header.top{
+    padding:32px 32px 32px; margin:-36px -24px 22px; border-bottom:2px solid var(--ink);
+    background: radial-gradient(circle at 88% 20%, rgba(43,110,99,0.10), transparent 55%), var(--paper);
+    display:grid; grid-template-columns:1fr 220px; gap:20px; align-items:center;
+  }
+  @media (max-width:760px){ header.top{ grid-template-columns:1fr; padding:24px; } header.top .hero-art{ display:none; } }
+  header.top .wordmark-row{ display:flex; align-items:center; gap:12px; }
+  header.top .logo-mark{ width:40px; height:40px; flex-shrink:0; }
+  header.top h1{ font-size:36px; letter-spacing:-0.015em; }
+  header.top .hero-subhead{ font-family:'Roboto',sans-serif; font-size:clamp(19px,2.4vw,24px); font-weight:700; color:var(--ink); margin-top:14px; line-height:1.35; max-width:640px; }
+  header.top .hero-intro{ font-family:'Roboto',sans-serif; font-size:14.5px; font-weight:600; color:var(--ink); margin:18px 0 10px; }
+  header.top .hero-bullets{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
+  header.top .hero-bullets li{ font-family:'Roboto',sans-serif; font-size:14.5px; line-height:1.5; color:var(--ink); padding-left:26px; position:relative; }
+  header.top .hero-bullets li::before{ content:"✓"; position:absolute; left:0; top:0; color:var(--brand); font-weight:700; font-size:15px; }
+  header.top .hero-credibility{ margin-top:20px; padding-top:14px; border-top:1px solid var(--line); font-family:'Roboto',sans-serif; font-size:12px; color:var(--ink-soft); line-height:1.6; max-width:600px; }
+  header.top .tagline{ font-size:13px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; margin-top:6px; line-height:1.5; max-width:680px; }
+  header.top .hero-art{ width:100%; height:auto; justify-self:end; }
+
+  .why-block{ background:var(--paper-raised); border:1px solid var(--line); padding:20px 24px; margin-bottom:34px; }
+  .why-block h2{ font-size:17px; margin-bottom:4px; }
+  .why-block .why-lead{ font-size:13px; color:var(--ink-soft); margin:0; }
+  .why-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:16px; }
+  @media (max-width:700px){ .why-grid{ grid-template-columns:1fr; } }
+  .why-item{ display:flex; gap:12px; }
+  .why-item .why-icon{ width:32px; height:32px; flex-shrink:0; color:var(--brand); }
+  .why-item .term{ font-family:'Roboto',sans-serif; font-weight:600; font-size:14px; color:var(--ink); margin-bottom:5px; }
+  .why-item p{ font-size:13px; line-height:1.55; margin:0; color:var(--ink-soft); }
+
+  section.block{ margin-bottom:38px; }
+  .block-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
+  .block-head .num{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--brand-deep); letter-spacing:0.05em; text-transform:uppercase; background:var(--paper-raised); border:1px solid var(--line-strong); padding:3px 9px; }
+  .block-head h2{ font-size:19px; }
+  .block-sub{ font-size:13px; color:var(--ink-soft); margin:-8px 0 16px 0; }
+
+  .field-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  @media (max-width:640px){ .field-grid{ grid-template-columns:1fr; } }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field.full{ grid-column:1/-1; }
+  .field label{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.05em; }
+  .field .hint{ font-size:11px; color:var(--ink-soft); font-weight:400; text-transform:none; letter-spacing:0; }
+  .field input, .field textarea, .field select{
+    border:1px solid var(--line-strong); background:var(--paper-raised); padding:10px 11px;
+    font-family:'Roboto',sans-serif; font-size:14px; color:var(--ink);
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{ outline:none; border-color:var(--brand); background:#fff; }
+  .field textarea{ resize:vertical; min-height:44px; }
+
+  .advanced-toggle{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--brand-deep); cursor:pointer; margin-top:12px; display:inline-block; text-decoration:underline; }
+  .advanced-fields{ display:none; margin-top:14px; }
+  .advanced-fields.shown{ display:block; }
+
+  .hours-table{ width:100%; border-collapse:collapse; margin-top:6px; }
+  .hours-table td{ padding:6px 8px 6px 0; vertical-align:middle; }
+  .hours-table .day{ font-family:'IBM Plex Mono',monospace; font-size:12px; width:100px; }
+  .hours-table input[type=time]{ border:1px solid var(--line-strong); background:var(--paper-raised); padding:6px 8px; font-family:'Roboto',sans-serif; font-size:13px; }
+  .hours-table .closed-label{ font-size:11.5px; color:var(--ink-soft); display:flex; align-items:center; gap:5px; }
+
+  .schema-out{ background:var(--ink); color:#CFE8DE; font-family:'IBM Plex Mono',monospace; font-size:12px; padding:18px; white-space:pre-wrap; overflow-x:auto; line-height:1.6; max-height:420px; overflow-y:auto; }
+  .copy-btn{ margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--paper-raised); border:1px solid var(--line-strong); padding:8px 14px; cursor:pointer; }
+
+  .install-tabs{ display:flex; gap:4px; margin:18px 0 14px; flex-wrap:wrap; }
+  .install-tab{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:8px 14px; cursor:pointer; border:1px solid var(--line-strong); background:var(--paper-raised); color:var(--ink-soft); }
+  .install-tab.active{ background:var(--brand); color:#fff; border-color:var(--brand); }
+  .install-panel{ display:none; background:var(--paper-raised); border:1px solid var(--line); padding:16px 20px; }
+  .install-panel.active{ display:block; }
+  .install-panel ol{ margin:0; padding-left:20px; font-size:13.5px; line-height:1.8; }
+  .install-panel .validate-note{ margin-top:12px; font-size:12px; color:var(--ink-soft); }
+  .install-panel .validate-note a{ color:var(--brand-deep); }
+
+  .progress-bar-wrap{ background:var(--paper-raised); border:1px solid var(--line); padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; gap:16px; }
+  .progress-bar{ flex:1; height:8px; background:var(--line); position:relative; }
+  .progress-bar-fill{ height:100%; background:var(--brand); width:0%; transition:width .3s ease; }
+  .progress-label{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; white-space:nowrap; }
+
+  .tier{ margin-bottom:22px; }
+  .tier-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  .tier-head .tnum{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brand-deep); background:var(--paper-raised); border:1px solid var(--line-strong); padding:2px 8px; }
+  .tier-head h3{ font-size:15.5px; }
+  .tier-why{ font-size:12.5px; color:var(--ink-soft); margin:2px 0 12px; line-height:1.5; }
+  .checklist-item{ display:flex; gap:12px; padding:12px 14px; border:1px solid var(--line); background:var(--paper-raised); margin-bottom:8px; align-items:flex-start; }
+  .checklist-item.checked{ border-color:var(--brand); background:#fff; }
+  .checklist-item input[type=checkbox]{ margin-top:3px; width:16px; height:16px; accent-color:var(--brand); cursor:pointer; flex-shrink:0; }
+  .checklist-item .ci-body{ flex:1; }
+  .checklist-item .ci-name{ font-weight:600; font-size:14px; }
+  .checklist-item .ci-name a{ color:var(--ink); text-decoration:none; border-bottom:1px solid var(--line-strong); }
+  .checklist-item .ci-name a:hover{ color:var(--brand-deep); border-color:var(--brand-deep); }
+  .checklist-item .ci-note{ font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
+
+  @media print{ body{background:#fff;} .advanced-toggle,.copy-btn,.install-tabs{ display:none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="hero-text">
+    <div class="wordmark-row">
+      <svg class="logo-mark" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="22" fill="#2B6E63"/>
+        <path d="M28 52 L44 68 L74 34" stroke="#F8F9F7" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>NAPCheck</h1>
+      <button id="clearAllBtn" style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:11px; background:none; border:1px solid var(--line-strong); color:var(--ink-soft); padding:6px 12px; cursor:pointer;">Start over</button>
+    </div>
+    <div class="subhead hero-subhead">Make sure your hours, address, and phone number are correct on Google, Apple Maps, Yelp, and Bing. Accurate listings help customers find you and boost your SEO and AI search rankings.</div>
+    <div class="tagline">
+      <p class="hero-intro">Enter your business info and the app will:</p>
+      <ul class="hero-bullets">
+        <li>Generate the schema code your website needs to show up correctly in Google and AI search, plus exactly where to add it to your website</li>
+        <li>Build a priority-ordered checklist of where to check and fix your listings</li>
+        <li>Write a search title and description built to rank well without getting cut off</li>
+      </ul>
+      <div class="hero-credibility">Built by an SEO expert with 15+ years of hands-on experience helping local businesses get found on Google, Apple Maps, Yelp, and Bing. The checklist and schema here are based on the same process used to audit real client listings.</div>
+    </div>
+    </div>
+
+    <svg class="hero-art" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="110" y1="110" x2="34" y2="150" stroke="#B7C0B6" stroke-width="2" stroke-dasharray="4 5"/>
+      <line x1="110" y1="110" x2="188" y2="60" stroke="#B7C0B6" stroke-width="2" stroke-dasharray="4 5"/>
+      <line x1="110" y1="110" x2="172" y2="172" stroke="#B7C0B6" stroke-width="2" stroke-dasharray="4 5"/>
+      <circle cx="34" cy="150" r="11" fill="#B4802B"/>
+      <circle cx="188" cy="60" r="9" fill="#4A5A63"/>
+      <circle cx="172" cy="172" r="13" fill="#2B6E63" opacity="0.45"/>
+      <path d="M110,18 C72,18 44,47 44,85 C44,132 110,200 110,200 C110,200 176,132 176,85 C176,47 148,18 110,18 Z" fill="#2B6E63"/>
+      <path d="M80,88 L102,110 L146,64" stroke="#F8F9F7" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </header>
+
+  <div class="why-block">
+    <h2>Where customers actually find you first</h2>
+    <p class="why-lead">If your hours or phone number are wrong here, people don't call to double-check, they just go with whichever competitor's listing looks right. Here's exactly what each one is doing with your info:</p>
+    <div class="why-grid">
+      <div class="why-item">
+        <svg class="why-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <div><div class="term">Google Search</div><p>When your hours, address, and phone number match everywhere, Google trusts your listing more and shows it to more people searching nearby.</p></div>
+      </div>
+      <div class="why-item">
+        <svg class="why-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="2"/><path d="M19 11a7 7 0 01-14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <div><div class="term">Siri & Alexa</div><p>Ask if a business is open right now, and they answer using this exact info, not your website. Get it right here and they always have the right answer.</p></div>
+      </div>
+      <div class="why-item">
+        <svg class="why-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3l2.2 5.4L20 10l-5.4 2.2L12 18l-2.2-5.4L4 10l5.4-1.6L12 3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        <div><div class="term">ChatGPT & AI search</div><p>When someone asks an AI tool about your business, it pieces together whatever it can find online. Give it one clear, correct source and it's a lot less likely to get something wrong.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-head"><span class="num">Step 1</span><h2>Your business info</h2></div>
+    <div class="block-sub">Enter the correct version once. Everything below is built from this.</div>
+    <div class="field-grid">
+      <div class="field"><label>Business name</label><input id="c-name" placeholder="Riverside Coffee Co."></div>
+      <div class="field"><label>Phone</label><input id="c-phone" placeholder="(555) 123-4567"></div>
+      <div class="field"><label>Street address</label><input id="c-street" placeholder="123 Main Street"></div>
+      <div class="field"><label>City, State, ZIP</label><input id="c-csz" placeholder="Portland, OR 97201"></div>
+      <div class="field"><label>Website</label><input id="c-website" placeholder="https://riversidecoffee.com"></div>
+      <div class="field">
+        <label>Business type <span class="hint">(helps Google categorize you correctly)</span></label>
+        <select id="c-type">
+          <option value="LocalBusiness">General / Local Business</option>
+          <option value="Restaurant">Restaurant</option>
+          <option value="CafeOrCoffeeShop">Cafe / Coffee Shop</option>
+          <option value="BarOrPub">Bar / Pub</option>
+          <option value="Store">Retail Store</option>
+          <option value="ProfessionalService">Professional Service</option>
+          <option value="LegalService">Legal Service</option>
+          <option value="FinancialService">Financial Service</option>
+          <option value="InsuranceAgency">Insurance Agency</option>
+          <option value="RealEstateAgent">Real Estate Agent</option>
+          <option value="MedicalBusiness">Medical Practice</option>
+          <option value="Dentist">Dentist</option>
+          <option value="VeterinaryCare">Veterinary Care</option>
+          <option value="GymOrFitnessCenter">Gym / Fitness Center</option>
+          <option value="BeautySalon">Beauty Salon</option>
+          <option value="HairSalon">Hair Salon</option>
+          <option value="AutoRepair">Auto Repair</option>
+          <option value="HomeAndConstructionBusiness">Home / Construction</option>
+          <option value="Plumber">Plumber</option>
+          <option value="Electrician">Electrician</option>
+          <option value="HVACBusiness">HVAC</option>
+          <option value="Locksmith">Locksmith</option>
+          <option value="MovingCompany">Moving Company</option>
+          <option value="ChildCare">Child Care</option>
+          <option value="SelfStorage">Self Storage</option>
+          <option value="TravelAgency">Travel Agency</option>
+        </select>
+      </div>
+      <div class="field"><label>Category label</label><input id="c-category" placeholder="Coffee Shop"></div>
+    </div>
+
+    <div class="advanced-toggle" id="advToggle">+ Add more details (optional, makes what you get below stronger)</div>
+    <div class="advanced-fields" id="advFields">
+      <div class="field-grid">
+        <div class="field"><label>Price range</label><select id="c-price"><option value="">—</option><option>$</option><option>$$</option><option>$$$</option><option>$$$$</option></select></div>
+        <div class="field"><label>Image URL</label><input id="c-image" placeholder="https://riversidecoffee.com/storefront.jpg"></div>
+        <div class="field full"><label>Short description <span class="hint">(1–2 sentences)</span></label><textarea id="c-desc" placeholder="Independent coffee shop serving hand-roasted espresso in downtown Portland."></textarea></div>
+        <div class="field"><label>Latitude</label><input id="c-lat" placeholder="45.5152"></div>
+        <div class="field"><label>Longitude</label><input id="c-lng" placeholder="-122.6784"></div>
+        <div class="field full"><label>Google listing URL <span class="hint">(links your profiles together)</span></label><input id="c-url-google" placeholder="https://maps.google.com/..."></div>
+        <div class="field full"><label>Yelp listing URL</label><input id="c-url-yelp" placeholder="https://www.yelp.com/biz/..."></div>
+        <div class="field full"><label>Bing listing URL</label><input id="c-url-bing" placeholder="https://www.bing.com/maps/..."></div>
+        <div class="field full"><label>Apple Maps listing URL</label><input id="c-url-apple" placeholder="https://maps.apple.com/..."></div>
+        <div class="field full"><label>Facebook page URL</label><input id="c-url-fb" placeholder="https://facebook.com/..."></div>
+        <div class="field full"><label>Areas you serve <span class="hint">(optional, separate with semicolons, e.g. "Ocoee, FL; Winter Garden, FL")</span></label><input id="c-areas" placeholder="Ocoee, FL; Winter Garden, FL; Orlando, FL"></div>
+        <div class="field full"><label>What you specialize in <span class="hint">(comma-separated, helps AI tools describe you accurately)</span></label><input id="c-topics" placeholder="Climate-Controlled Storage, Small Business Storage, RV Storage"></div>
+        <div class="field full"><label>Products / services <span class="hint">(one per line: Name | Description)</span></label><textarea id="c-offerings" placeholder="Small Storage Units | 5x5 and 5x10 walk-in options for seasonal gear.&#10;Climate-Controlled Units | Temperature-regulated storage for sensitive items." style="min-height:80px;"></textarea></div>
+        <div class="field full">
+          <label>Page navigation trail <span class="hint">(rarely needed for a single-location business, see note)</span></label>
+          <textarea id="c-breadcrumbs" placeholder="Home | https://example.com/&#10;Storage Units | https://example.com/units&#10;Climate-Controlled | https://example.com/units/climate-controlled" style="min-height:70px;"></textarea>
+          <div class="hint" style="margin-top:4px; line-height:1.5;">Only fill this in if your website actually has multiple linked pages or sections (e.g. a services page, a locations page) you want search engines to understand as connected. If you're a single page with one URL, there's no real trail to describe. Skip it.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block-head" style="margin-top:26px;"><h2 style="font-size:16px;">Hours</h2></div>
+    <div class="hint" style="margin-bottom:8px; color:var(--warn);">These start at 9am to 5pm as a placeholder. Double-check every day before generating your code, since this is exactly what gets published as your official hours.</div>
+    <table class="hours-table" id="hoursTable"></table>
+  </section>
+
+  <section class="block">
+    <div class="block-head"><span class="num">Step 2</span><h2>Your website's code</h2></div>
+    <div class="block-sub">Updates automatically as you type above. Copy this into your website so Google, AI search, and voice assistants show accurate info about your business.</div>
+    <div class="schema-out mono" id="schemaOut">Fill in your business info above to generate this.</div>
+    <button class="copy-btn" id="copySchema">Copy code</button>
+
+    <div class="block-head" style="margin-top:26px;"><h2 style="font-size:16px;">Where to paste it</h2></div>
+    <div class="install-tabs" id="installTabs"></div>
+    <div id="installPanels"></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head"><span class="num">Step 3</span><h2>Search title &amp; description</h2></div>
+    <div class="block-sub">This is what people see in Google's search results. Too long and Google cuts it off. The counters below show you exactly how much room you've got.</div>
+    <div class="field-grid">
+      <div class="field full">
+        <label>Page title</label>
+        <input id="seo-title" placeholder="Riverside Coffee Co. | Coffee Shop in Portland, OR">
+        <div class="hint" id="titleCounter" style="margin-top:4px;">0 characters</div>
+      </div>
+      <div class="field full">
+        <label>Meta description</label>
+        <textarea id="seo-desc" placeholder="Riverside Coffee Co. is a coffee shop in Portland, OR. Stop by for hand-roasted espresso, fresh pastries, and a cozy place to work. Call (555) 123-4567." style="min-height:70px;"></textarea>
+        <div class="hint" id="descCounter" style="margin-top:4px;">0 characters</div>
+      </div>
+    </div>
+    <button class="copy-btn" id="suggestSeo">Fill in a suggestion based on my business info</button>
+    <button class="copy-btn" id="copySeo" style="margin-left:8px;">Copy both</button>
+  </section>
+
+  <section class="block">
+    <div class="block-head"><span class="num">Step 4</span><h2>Listing audit checklist</h2></div>
+    <div class="block-sub">In priority order. Fix the top tier first, since it cascades down to dozens of directories automatically.</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar"><div class="progress-bar-fill" id="progressFill"></div></div>
+      <div class="progress-label mono"><span id="progressCount">0</span> / <span id="progressTotal">0</span> verified</div>
+    </div>
+    <div id="tiersContainer"></div>
+  </section>
+
+</div>
+
+<script>
+/* ================= Storage ================= */
+const mem = {};
+const storage = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return mem[k] ?? null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){ mem[k]=v; } }
+};
+
+/* ================= Config ================= */
+const days = [['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
+
+const checklistTiers = [
+  {
+    title: 'Fix the source first: data aggregators',
+    why: 'These companies feed business data to hundreds of directories, nav systems, and voice assistants at once. Correct the source here and it cascades outward; fix only the sites below it and aggregators will periodically overwrite your corrections.',
+    items: [
+      { name:'Data Axle (formerly Infogroup)', url:'https://www.data-axle.com/', note:'One of the largest US business data providers. Feeds search engines, in-car navigation, and a large share of secondary directories.' },
+      { name:'Foursquare', url:'https://foursquare.com/business/', note:'Powers location data behind Apple Maps, Uber, Snapchat, and many apps most owners never think to check directly.' },
+      { name:'TransUnion Digital Business Profile (formerly Neustar Localeze)', url:'https://www.transunion.com/', note:'Feeds Bing, Apple, and voice assistants. Direct self-serve correction is limited now, and usually requires going through a listing-management tool rather than a simple form.' },
+    ]
+  },
+  {
+    title: 'The primary listings',
+    why: 'What customers actually see first when they search or ask for directions.',
+    items: [
+      { name:'Google Business Profile', url:'https://business.google.com/', note:'The single highest-impact listing for most local businesses. Also the one AI Overviews lean on most heavily.' },
+      { name:'Apple Maps (Apple Business Connect)', url:'https://businessconnect.apple.com/', note:'Powers Siri and CarPlay directions. Often overlooked since it has no independent search traffic of its own.' },
+      { name:'Bing Places', url:'https://www.bingplaces.com/', note:'Smaller share of search traffic, but feeds Bing Chat and Microsoft Copilot answers.' },
+      { name:'Yelp', url:'https://biz.yelp.com/', note:'Still a major trust signal, especially for restaurants, home services, and healthcare.' },
+    ]
+  },
+  {
+    title: 'Industry-specific directories',
+    why: 'Pick the ones that actually apply to this business. Being listed everywhere generic doesn\'t help as much as being correct on the 2-3 directories your specific customers actually use.',
+    items: [
+      { name:'Better Business Bureau (BBB)', url:'https://www.bbb.org/', note:'Broadly relevant across almost every industry. One of the most-cited trust signals.' },
+      { name:'Industry-specific example: TripAdvisor / OpenTable', url:'https://www.tripadvisor.com/', note:'Relevant for restaurants and hospitality.' },
+      { name:'Industry-specific example: Healthgrades / Zocdoc', url:'https://www.healthgrades.com/', note:'Relevant for medical and dental practices.' },
+      { name:'Industry-specific example: Avvo / FindLaw', url:'https://www.avvo.com/', note:'Relevant for legal services.' },
+      { name:'Industry-specific example: Angi / Houzz', url:'https://www.angi.com/', note:'Relevant for home services and contractors.' },
+    ]
+  },
+  {
+    title: 'Social & community profiles',
+    why: 'Lower direct SEO weight than the tiers above, but still commonly cross-referenced and worth keeping accurate.',
+    items: [
+      { name:'Facebook Business Page', url:'https://www.facebook.com/business/', note:'Still one of the most-viewed profiles for local businesses, especially for hours and phone lookups.' },
+      { name:'Nextdoor Business', url:'https://business.nextdoor.com/', note:'High-trust for hyperlocal service businesses.' },
+      { name:'LinkedIn Company Page', url:'https://www.linkedin.com/', note:'Matters most for B2B and professional services.' },
+    ]
+  },
+];
+
+/* ================= Advanced canonical fields toggle ================= */
+document.getElementById('advToggle').addEventListener('click', ()=>{
+  document.getElementById('advFields').classList.toggle('shown');
+});
+
+/* ================= Hours table ================= */
+const hoursTable = document.getElementById('hoursTable');
+days.forEach(([key,label])=>{
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td class="day">${label}</td>
+    <td><input type="time" id="h-${key}-open" value="09:00"></td>
+    <td>–</td>
+    <td><input type="time" id="h-${key}-close" value="17:00"></td>
+    <td><label class="closed-label"><input type="checkbox" id="h-${key}-closed" ${key==='sun'?'checked':''}> Closed</label></td>
+  `;
+  hoursTable.appendChild(row);
+});
+function getHoursData(){
+  const data = {};
+  days.forEach(([key])=>{
+    data[key] = { closed: document.getElementById(`h-${key}-closed`).checked, open: document.getElementById(`h-${key}-open`).value, close: document.getElementById(`h-${key}-close`).value };
+  });
+  return data;
+}
+function hoursToDisplayString(hoursData){
+  return days.filter(([k])=>!hoursData[k].closed).map(([k,label])=>`${label.slice(0,3)} ${hoursData[k].open}–${hoursData[k].close}`).join(', ');
+}
+
+/* ================= Canonical + schema (live) ================= */
+function getCanonical(){
+  return {
+    name: document.getElementById('c-name').value, street: document.getElementById('c-street').value,
+    csz: document.getElementById('c-csz').value, phone: document.getElementById('c-phone').value,
+    website: document.getElementById('c-website').value, category: document.getElementById('c-category').value,
+    type: document.getElementById('c-type').value, price: document.getElementById('c-price').value,
+    image: document.getElementById('c-image').value, description: document.getElementById('c-desc').value,
+    lat: document.getElementById('c-lat').value, lng: document.getElementById('c-lng').value,
+    urlGoogle: document.getElementById('c-url-google').value, urlYelp: document.getElementById('c-url-yelp').value,
+    urlBing: document.getElementById('c-url-bing').value, urlApple: document.getElementById('c-url-apple').value,
+    urlFb: document.getElementById('c-url-fb').value,
+    areas: document.getElementById('c-areas').value, topics: document.getElementById('c-topics').value,
+    offerings: document.getElementById('c-offerings').value, breadcrumbs: document.getElementById('c-breadcrumbs').value,
+  };
+}
+function normalizePhoneForSchema(s){
+  let d = (s||'').replace(/\D/g,'');
+  if (d.length===11 && d[0]==='1') return '+'+d;
+  if (d.length===10) return '+1'+d;
+  return (s||'').trim();
+}
+function buildOpeningHours(hoursData){
+  const dayNames = { mon:'Monday', tue:'Tuesday', wed:'Wednesday', thu:'Thursday', fri:'Friday', sat:'Saturday', sun:'Sunday' };
+  const spec = [];
+  Object.keys(hoursData).forEach(d=>{
+    const day = hoursData[d];
+    if (day.closed || !day.open || !day.close) return;
+    spec.push({ '@type':'OpeningHoursSpecification', dayOfWeek: 'https://schema.org/'+dayNames[d], opens: day.open, closes: day.close });
+  });
+  return spec;
+}
+function buildOfferCatalog(offeringsText, businessId, catalogName){
+  const lines = (offeringsText||'').split('\n').map(l=>l.trim()).filter(Boolean);
+  if (!lines.length) return null;
+  const items = lines.map(line=>{
+    const [name, desc] = line.split('|').map(s=>s ? s.trim() : '');
+    const service = { '@type':'Service', name: name || line };
+    if (desc) service.description = desc;
+    if (businessId) service.provider = { '@id': businessId };
+    return { '@type':'Offer', itemOffered: service };
+  });
+  return { '@type':'OfferCatalog', name: catalogName || 'Services', itemListElement: items };
+}
+function buildBreadcrumbs(breadcrumbText){
+  const lines = (breadcrumbText||'').split('\n').map(l=>l.trim()).filter(Boolean);
+  if (!lines.length) return null;
+  const items = lines.map((line, i)=>{
+    const [name, url] = line.split('|').map(s=>s ? s.trim() : '');
+    const li = { '@type':'ListItem', position: i+1, name: name || line };
+    if (url) li.item = url;
+    return li;
+  });
+  return { '@type':'BreadcrumbList', itemListElement: items };
+}
+function buildAreaServed(areasText){
+  // Semicolon-delimited: commas inside each entry (e.g. "Ocoee, FL") must survive intact.
+  const areas = (areasText||'').split(';').map(s=>s.trim()).filter(Boolean);
+  if (!areas.length) return null;
+  return areas.map(a => ({ '@type':'AdministrativeArea', name: a }));
+}
+function buildKnowsAbout(topicsText){
+  const topics = (topicsText||'').split(',').map(s=>s.trim()).filter(Boolean);
+  return topics.length ? topics : null;
+}
+function buildSchemaObject(canon, hoursData){
+  const cszParts = (canon.csz||'').split(',').map(s=>s.trim());
+  const city = cszParts[0] || '';
+  let state='', zip='';
+  if (cszParts[1]) { const m = cszParts[1].trim().match(/^([A-Za-z]{2,})\s*(\d{5})?$/); if (m) { state = m[1]; zip = m[2] || ''; } }
+
+  const businessId = canon.website ? canon.website.replace(/\/+$/,'') + '#business' : undefined;
+  const business = { '@type': canon.type || 'LocalBusiness' };
+  if (businessId) business['@id'] = businessId;
+  business.name = canon.name || '';
+  if (canon.description) business.description = canon.description;
+  if (canon.image) {
+    const imgs = canon.image.split(',').map(s=>s.trim()).filter(Boolean);
+    business.image = imgs.length > 1 ? imgs : imgs[0];
+  }
+  if (canon.website) business.url = canon.website;
+  business.telephone = normalizePhoneForSchema(canon.phone);
+  if (canon.price) business.priceRange = canon.price;
+  business.address = { '@type':'PostalAddress', streetAddress: canon.street || '', addressLocality: city, addressRegion: state, postalCode: zip, addressCountry: 'US' };
+  const latNum = parseFloat(canon.lat), lngNum = parseFloat(canon.lng);
+  if (canon.lat && canon.lng && !isNaN(latNum) && !isNaN(lngNum)) business.geo = { '@type':'GeoCoordinates', latitude: latNum, longitude: lngNum };
+  if (canon.urlGoogle) business.hasMap = canon.urlGoogle;
+  const hours = buildOpeningHours(hoursData);
+  if (hours.length) business.openingHoursSpecification = hours;
+  const sameAsUrls = [canon.urlGoogle, canon.urlYelp, canon.urlBing, canon.urlApple, canon.urlFb].filter(u => u && /^https?:\/\//.test(u.trim()));
+  if (sameAsUrls.length) business.sameAs = sameAsUrls;
+  const knowsAbout = buildKnowsAbout(canon.topics);
+  if (knowsAbout) business.knowsAbout = knowsAbout;
+  const areaServed = buildAreaServed(canon.areas);
+  if (areaServed) business.areaServed = areaServed;
+  const catalog = buildOfferCatalog(canon.offerings, businessId, canon.name ? canon.name + ' Services' : 'Services');
+  if (catalog) business.hasOfferCatalog = catalog;
+
+  const breadcrumbs = buildBreadcrumbs(canon.breadcrumbs);
+  if (breadcrumbs) {
+    return { '@context':'https://schema.org', '@graph': [business, breadcrumbs] };
+  }
+  return { '@context':'https://schema.org', ...business };
+}
+function buildSchemaText(canon, hoursData){
+  const obj = buildSchemaObject(canon, hoursData);
+  return `<script type="application/ld+json">\n${JSON.stringify(obj, null, 2)}\n<\/script>`;
+}
+function refreshSchema(){
+  const canon = getCanonical();
+  const hoursData = getHoursData();
+  if (!canon.name.trim()) {
+    document.getElementById('schemaOut').textContent = 'Fill in your business info above to see your code here.';
+    return;
+  }
+  document.getElementById('schemaOut').textContent = buildSchemaText(canon, hoursData);
+}
+['c-name','c-phone','c-street','c-csz','c-website','c-type','c-category','c-price','c-image','c-desc','c-lat','c-lng','c-url-google','c-url-yelp','c-url-bing','c-url-apple','c-url-fb','c-areas','c-topics','c-offerings','c-breadcrumbs'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', refreshSchema);
+});
+document.querySelectorAll('.hours-table input').forEach(el => el.addEventListener('input', refreshSchema));
+document.querySelectorAll('.hours-table input[type=checkbox]').forEach(el => el.addEventListener('change', refreshSchema));
+
+/* ================= Form persistence — everything survives a reload, not just the checklist ================= */
+const persistedFieldIds = [
+  'c-name','c-phone','c-street','c-csz','c-website','c-type','c-category',
+  'c-price','c-image','c-desc','c-lat','c-lng',
+  'c-url-google','c-url-yelp','c-url-bing','c-url-apple','c-url-fb',
+  'c-areas','c-topics','c-offerings','c-breadcrumbs',
+  'seo-title','seo-desc',
+];
+function saveFormData(){
+  const data = {};
+  persistedFieldIds.forEach(id => { const el = document.getElementById(id); if (el) data[id] = el.value; });
+  days.forEach(([key])=>{
+    data[`h-${key}-open`] = document.getElementById(`h-${key}-open`).value;
+    data[`h-${key}-close`] = document.getElementById(`h-${key}-close`).value;
+    data[`h-${key}-closed`] = document.getElementById(`h-${key}-closed`).checked;
+  });
+  storage.set('napcheck-formdata', JSON.stringify(data));
+}
+function restoreFormData(){
+  const raw = storage.get('napcheck-formdata');
+  if (!raw) return;
+  let data;
+  try { data = JSON.parse(raw); } catch(e){ return; }
+  persistedFieldIds.forEach(id => { if (data[id] !== undefined) { const el = document.getElementById(id); if (el) el.value = data[id]; } });
+  days.forEach(([key])=>{
+    if (data[`h-${key}-open`] !== undefined) document.getElementById(`h-${key}-open`).value = data[`h-${key}-open`];
+    if (data[`h-${key}-close`] !== undefined) document.getElementById(`h-${key}-close`).value = data[`h-${key}-close`];
+    if (data[`h-${key}-closed`] !== undefined) document.getElementById(`h-${key}-closed`).checked = data[`h-${key}-closed`];
+  });
+}
+persistedFieldIds.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', saveFormData); });
+document.querySelectorAll('.hours-table input').forEach(el => el.addEventListener('input', saveFormData));
+document.querySelectorAll('.hours-table input[type=checkbox]').forEach(el => el.addEventListener('change', saveFormData));
+restoreFormData();
+refreshSchema();
+updateSeoCounters();
+
+document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+  if (!confirm('This clears everything you\'ve entered and your checklist progress. Are you sure?')) return;
+  try { localStorage.removeItem('napcheck-formdata'); localStorage.removeItem('napcheck-checklist'); } catch(e){}
+  location.reload();
+});
+
+function copyToClipboard(text, btn){
+  const orig = btn.textContent;
+  function showResult(ok){
+    btn.textContent = ok ? 'Copied' : 'Select & copy manually';
+    setTimeout(()=>{ btn.textContent = orig; }, ok ? 1400 : 2600);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(()=> showResult(true)).catch(()=> legacyCopy());
+  } else {
+    legacyCopy();
+  }
+  function legacyCopy(){
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      showResult(ok);
+    } catch(e) {
+      showResult(false);
+    }
+  }
+}
+document.getElementById('copySchema').addEventListener('click', ()=>{
+  const text = document.getElementById('schemaOut').textContent;
+  copyToClipboard(text, document.getElementById('copySchema'));
+});
+
+/* ================= SEO title & description ================= */
+function titleStatus(len){
+  if (len === 0) return {color:'var(--ink-soft)', label:'characters'};
+  if (len <= 60) return {color:'var(--good)', label:'characters, good length'};
+  if (len <= 70) return {color:'var(--warn)', label:'characters, may get cut off in search results'};
+  return {color:'var(--critical)', label:'characters, will likely get cut off'};
+}
+function descStatus(len){
+  if (len === 0) return {color:'var(--ink-soft)', label:'characters'};
+  if (len < 70) return {color:'var(--warn)', label:'characters, a bit short, Google may write its own instead'};
+  if (len <= 160) return {color:'var(--good)', label:'characters, good length'};
+  if (len <= 175) return {color:'var(--warn)', label:'characters, may get cut off'};
+  return {color:'var(--critical)', label:'characters, will likely get cut off'};
+}
+function updateSeoCounters(){
+  const title = document.getElementById('seo-title').value;
+  const desc = document.getElementById('seo-desc').value;
+  const ts = titleStatus(title.length);
+  const ds = descStatus(desc.length);
+  const tEl = document.getElementById('titleCounter');
+  const dEl = document.getElementById('descCounter');
+  tEl.textContent = `${title.length} ${ts.label}`;
+  tEl.style.color = ts.color;
+  dEl.textContent = `${desc.length} ${ds.label}`;
+  dEl.style.color = ds.color;
+}
+document.getElementById('seo-title').addEventListener('input', updateSeoCounters);
+document.getElementById('seo-desc').addEventListener('input', updateSeoCounters);
+document.getElementById('suggestSeo').addEventListener('click', ()=>{
+  const canon = getCanonical();
+  const cszParts = (canon.csz||'').split(',').map(s=>s.trim());
+  const city = cszParts[0] || '';
+  const state = cszParts[1] ? cszParts[1].replace(/\d+/g,'').trim() : '';
+  const cityState = [city, state].filter(Boolean).join(', ');
+  const cat = canon.category || 'business';
+  let title = canon.name || '';
+  if (cat && cityState) title += ` | ${cat} in ${cityState}`;
+  else if (cityState) title += ` | ${cityState}`;
+  document.getElementById('seo-title').value = title;
+
+  let desc = canon.name ? `${canon.name} is a ${cat.toLowerCase()}` : '';
+  if (cityState) desc += ` in ${cityState}`;
+  desc += '.';
+  if (canon.description) desc += ` ${canon.description}`;
+  if (canon.phone) desc += ` Call ${canon.phone}.`;
+  document.getElementById('seo-desc').value = desc.trim();
+  updateSeoCounters();
+});
+document.getElementById('copySeo').addEventListener('click', ()=>{
+  const title = document.getElementById('seo-title').value;
+  const desc = document.getElementById('seo-desc').value;
+  const text = `<title>${title}</title>\n<meta name="description" content="${desc}">`;
+  copyToClipboard(text, document.getElementById('copySeo'));
+});
+
+/* ================= Install guidance ================= */
+const installGuides = [
+  { id:'wordpress', label:'WordPress', steps:[
+    'Install a lightweight plugin like "Insert Headers and Footers" (or use your theme\'s built-in header/footer code box if it has one).',
+    'Open the plugin settings and find the "Header" script box.',
+    'Paste the full schema block, including the &lt;script&gt; tags, into that box.',
+    'Save. It loads in the &lt;head&gt; of every page. Fine for a single-location business on the homepage or contact page.',
+  ]},
+  { id:'squarespace', label:'Squarespace', steps:[
+    'Go to Settings → Advanced → Code Injection (requires a Business plan or higher).',
+    'Paste the schema block into the "Header" box.',
+    'Save. Squarespace injects it site-wide.',
+  ]},
+  { id:'wix', label:'Wix', steps:[
+    'Go to Settings → Custom Code (available on most paid Wix plans).',
+    'Click "Add Code Snippet," paste the schema block, set it to load in the &lt;Head&gt;.',
+    'Save and publish.',
+  ]},
+  { id:'shopify', label:'Shopify', steps:[
+    'Go to Online Store → Themes → Edit Code.',
+    'Open theme.liquid and paste the schema block just before the closing &lt;/head&gt; tag.',
+    'Save.',
+  ]},
+  { id:'custom', label:'Custom / Other', steps:[
+    'Open your page\'s HTML (index.html or a header include/template).',
+    'Paste the schema block anywhere between &lt;head&gt; and &lt;/head&gt;. If you can\'t edit the head, just before &lt;/body&gt; also works.',
+    'Save and re-deploy.',
+  ]},
+];
+(function renderInstallTabs(){
+  const tabsEl = document.getElementById('installTabs');
+  const panelsEl = document.getElementById('installPanels');
+  installGuides.forEach((g,i)=>{
+    const tab = document.createElement('div');
+    tab.className = 'install-tab' + (i===0?' active':'');
+    tab.textContent = g.label;
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.install-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.install-panel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('install-'+g.id).classList.add('active');
+    });
+    tabsEl.appendChild(tab);
+    const panel = document.createElement('div');
+    panel.className = 'install-panel' + (i===0?' active':'');
+    panel.id = 'install-'+g.id;
+    panel.innerHTML = `<ol>${g.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+      <div class="validate-note">Once it's live, confirm it with Google's <a href="https://search.google.com/test/rich-results" target="_blank" rel="noopener">Rich Results Test</a> or the <a href="https://validator.schema.org/" target="_blank" rel="noopener">Schema Markup Validator</a>.</div>`;
+    panelsEl.appendChild(panel);
+  });
+})();
+
+/* ================= Checklist (guided, persisted) ================= */
+let checkedItems = JSON.parse(storage.get('napcheck-checklist') || '{}');
+function itemKey(tierIdx, itemIdx){ return `${tierIdx}-${itemIdx}`; }
+function renderChecklist(){
+  const container = document.getElementById('tiersContainer');
+  container.innerHTML = '';
+  let total = 0, done = 0;
+  checklistTiers.forEach((tier, ti) => {
+    const tierEl = document.createElement('div');
+    tierEl.className = 'tier';
+    tierEl.innerHTML = `<div class="tier-head"><span class="tnum">Tier ${ti+1}</span><h3>${tier.title}</h3></div><div class="tier-why">${tier.why}</div>`;
+    tier.items.forEach((item, ii) => {
+      total++;
+      const key = itemKey(ti, ii);
+      const isChecked = !!checkedItems[key];
+      if (isChecked) done++;
+      const row = document.createElement('div');
+      row.className = 'checklist-item' + (isChecked ? ' checked' : '');
+      row.innerHTML = `
+        <input type="checkbox" ${isChecked?'checked':''} data-key="${key}">
+        <div class="ci-body">
+          <div class="ci-name"><a href="${item.url}" target="_blank" rel="noopener">${item.name}</a></div>
+          <div class="ci-note">${item.note}</div>
+        </div>
+      `;
+      row.querySelector('input').addEventListener('change', (e)=>{
+        if (e.target.checked) checkedItems[key] = true; else delete checkedItems[key];
+        storage.set('napcheck-checklist', JSON.stringify(checkedItems));
+        renderChecklist();
+      });
+      tierEl.appendChild(row);
+    });
+    container.appendChild(tierEl);
+  });
+  document.getElementById('progressCount').textContent = done;
+  document.getElementById('progressTotal').textContent = total;
+  document.getElementById('progressFill').style.width = total ? `${Math.round(done/total*100)}%` : '0%';
+}
+renderChecklist();
+
+</script>
+</body>
+</html>
